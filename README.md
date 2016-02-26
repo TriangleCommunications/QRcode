@@ -21,7 +21,13 @@ You should have received a copy of the GNU Lesser General Public License along
 with this library; if not, write to the Free Software Foundation, Inc., 51
 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
+## USAGE ##
 
+Class files are named for classes to make auto-loading simpler.
+
+Just call the QRcode satic method like so:
+
+QRcode::png('PHP QR Code');
   
 ## ACKNOWLEDGMENTS ##
 
