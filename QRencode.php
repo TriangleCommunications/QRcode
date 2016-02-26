@@ -22,21 +22,29 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+/** QR Code encoder.
+Encoder is used by QRCode to create simple static code generators. */
 class QRencode {
 
-    public $casesensitive = true;
-    public $eightbit = false;
+    public $casesensitive = true; ///< __Boolean__ does input stream id case sensitive, if not encoder may use more optimal charsets
+    public $eightbit = false;     ///< __Boolean__ does input stream is 8 bit
     
-    public $version = 0;
-    public $size = 3;
-    public $margin = 4;
+    public $version = 0;          ///< __Integer__ code version (total size) if __0__ - will be auto-detected
+    public $size = 3;             ///< __Integer__ pixel zoom factor, multiplier to map virtual code pixels to image output pixels
+    public $margin = 4;           ///< __Integer__ margin (silent zone) size, in code pixels
     
-    public $structured = 0; // not supported yet
+    public $structured = 0;       ///< Structured QR codes. Not supported.
     
-    public $level = QR_ECLEVEL_L;
-    public $hint = QR_MODE_8;
+    public $level = QR_ECLEVEL_L; ///< __Integer__ error correction level __QR_ECLEVEL_L__, __QR_ECLEVEL_M__, __QR_ECLEVEL_Q__ or __QR_ECLEVEL_H__
+    public $hint = QR_MODE_8;     ///< __Integer__ encoding hint, __QR_MODE_8__ or __QR_MODE_KANJI__, Because Kanji encoding is kind of 8 bit encoding we need to hint encoder to use Kanji mode explicite. (otherwise it may try to encode it as plain 8 bit stream)
     
     //----------------------------------------------------------------------
+    /** Encoder instances factory.
+    @param Integer $level error correction level __QR_ECLEVEL_L__, __QR_ECLEVEL_M__, __QR_ECLEVEL_Q__ or __QR_ECLEVEL_H__
+    @param Integer $size pixel zoom factor, multiplier to map virtual code pixels to image output pixels
+    @param Integer $margin margin (silent zone) size, in code pixels
+    @return builded QRencode instance
+    */
     public static function factory($level = QR_ECLEVEL_L, $size = 3, $margin = 4)
     {
         $enc = new QRencode();
@@ -72,7 +80,12 @@ class QRencode {
     }
     
     //----------------------------------------------------------------------
-    public function encodeRAW($intext, $outfile = false) 
+    /** Encodes input into Raw code table.
+    @param String $intext input text
+    @param Boolean $notused (optional, not used) placeholder for similar outfile parameter
+    @return __Array__ Raw code frame
+    */
+    public function encodeRAW($intext, $notused = false) 
     {
         $code = new QRcode();
 
@@ -86,6 +99,11 @@ class QRencode {
     }
 
     //----------------------------------------------------------------------
+    /** Encodes input into binary code table.
+    @param String $intext input text
+    @param String $outfile (optional) output file to save code table, if __false__ file will be not saved
+    @return __Array__ binary code frame
+    */
     public function encode($intext, $outfile = false) 
     {
         $code = new QRcode();
@@ -98,15 +116,21 @@ class QRencode {
         
         QRtools::markTime('after_encode');
         
+        $binarized = QRtools::binarize($code->data);
         if ($outfile!== false) {
-            file_put_contents($outfile, join("\n", QRtools::binarize($code->data)));
-        } else {
-            return QRtools::binarize($code->data);
+            file_put_contents($outfile, join("\n", $binarized));
         }
+        
+        return $binarized;
     }
     
     //----------------------------------------------------------------------
-    public function encodePNG($intext, $outfile = false,$saveandprint=false) 
+    /** Encodes input into PNG image.
+    @param String $intext input text
+    @param String $outfile (optional) output file name, if __false__ outputs to browser with required headers
+    @param Boolean $saveandprint (optional) if __true__ code is outputed to browser and saved to file, otherwise only saved to file. It is effective only if $outfile is specified.
+    */
+    public function encodePNG($intext, $outfile = false, $saveandprint=false) 
     {
         try {
         

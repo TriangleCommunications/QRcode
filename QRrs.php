@@ -27,9 +27,18 @@
 
 class QRrs {
 
+    /** Encoder items array */
     public static $items = array();
     
     //----------------------------------------------------------------------
+    /** Encoder initialisation
+        @param Integer $symsize symbol size, bit count (1..8)
+        @param Integer $gfpoly Galois Field Polynomial
+        @param Integer $fcr First consecutive root
+        @param Integer $prim Primitive element
+        @param Integer $nroots Number of generator roots = number of parity symbols
+        @param Integer $pad Padding bytes in shortened block
+    */
     public static function init_rs($symsize, $gfpoly, $fcr, $prim, $nroots, $pad)
     {
         foreach(self::$items as $rs) {

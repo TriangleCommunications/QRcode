@@ -22,16 +22,24 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-class FrameFiller {
+/** Fills frame with data.
+ * Each empty frame consist of markers, timing symbols and format configuration.
+ * Remaining place is place for data, and should be filled according to QR Code spec.
+ */
+class QRframeFiller {
 
-    public $width;
-    public $frame;
-    public $x;
-    public $y;
-    public $dir;
-    public $bit;
+    public $width; ///< __Integer__ Frame width
+    public $frame; ///< __Array__ Frame itself
+    public $x;     ///< __Integer__ current X position
+    public $y;     ///< __Integer__ current Y position
+    public $dir;   ///< __Integer__ direction
+    public $bit;   ///< __Integer__ bit
     
     //----------------------------------------------------------------------
+    /** Frame filler Constructor.
+    @param Integer $width frame size
+    @param Array $frame Frame array
+    */
     public function __construct($width, &$frame)
     {
         $this->width = $width;
@@ -43,18 +51,27 @@ class FrameFiller {
     }
     
     //----------------------------------------------------------------------
+    /** Sets frame code at given position.
+    @param Array $at position, map containing __x__ and __y__ coordinates
+    @param Integer $val value to set
+    */
     public function setFrameAt($at, $val)
     {
         $this->frame[$at['y']][$at['x']] = chr($val);
     }
     
     //----------------------------------------------------------------------
+    /** Gets frame code from given position.
+    @param Array $at position, map containing __x__ and __y__ coordinates
+    @return Integer value at requested position
+    */
     public function getFrameAt($at)
     {
         return ord($this->frame[$at['y']][$at['x']]);
     }
     
     //----------------------------------------------------------------------
+    /** Proceed to next code point. */
     public function next()
     {
         do {

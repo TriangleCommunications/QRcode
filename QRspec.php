@@ -31,8 +31,22 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+/** QR-Code specification and Code Frame handling.
+Contains code specifications, calculates base frame, code structure 
+and base properties
+*/
 class QRspec {
 
+    /** Array specifying properties of QR-Code "versions". 
+    Each so-called version has specified code area size and capacity. 
+    There are 40 versions, this table specifies for each of them four parameters:
+    
+    - Integer __QRCAP_WIDTH__ - size of code in pixels
+    - Integer __QRCAP_WORDS__ - code capacity, in words
+    - Integer __QRCAP_REMINDER__ - remainder words
+    - Array of Integers __QRCAP_EC__ - RS correction code count for each of four ECC levels
+    \hideinitializer
+    */  
     public static $capacity = array(
         array(  0,    0, 0, array(   0,    0,    0,    0)),
         array( 21,   26, 0, array(   7,   10,   13,   17)), // 1
@@ -78,30 +92,53 @@ class QRspec {
     );
     
     //----------------------------------------------------------------------
+    /** Calculates data length for specified code configuration.
+    @param Integer $version Code version
+    @param Integer $level ECC level
+    @returns Code data capacity
+    */
     public static function getDataLength($version, $level)
     {
         return self::$capacity[$version][QRCAP_WORDS] - self::$capacity[$version][QRCAP_EC][$level];
     }
     
     //----------------------------------------------------------------------
+    /** Calculates count of Error Correction Codes for specified code configuration.
+    @param Integer $version Code version
+    @param Integer $level ECC level
+    @returns ECC code count
+    */
     public static function getECCLength($version, $level)
     {
         return self::$capacity[$version][QRCAP_EC][$level];
     }
     
     //----------------------------------------------------------------------
+    /** Gets pixel width of code.
+    @param Integer $version Code version
+    @returns Code width, in pixels
+    */
     public static function getWidth($version)
     {
         return self::$capacity[$version][QRCAP_WIDTH];
     }
     
     //----------------------------------------------------------------------
+    /** Gets reminder chars length.
+    @param Integer $version Code version
+    @returns Reminder length
+    */
     public static function getRemainder($version)
     {
         return self::$capacity[$version][QRCAP_REMINDER];
     }
     
     //----------------------------------------------------------------------
+    /** Finds minimal code version capable of hosting specified data length.
+    @param Integer $size amount of raw data
+    @param Integer $level ECC level
+    @returns code version capable of hosting specified amount of data at specified ECC level
+    */
     public static function getMinimumVersion($size, $level)
     {
 
@@ -115,7 +152,10 @@ class QRspec {
     }
 
     //######################################################################
-    
+
+    /** Length bits Table.
+    \hideinitializer
+    */
     public static $lengthTableBits = array(
         array(10, 12, 14),
         array( 9, 11, 13),
@@ -165,8 +205,10 @@ class QRspec {
     }
 
     // Error correction code -----------------------------------------------
-    // Table of the error correction code (Reed-Solomon block)
-    // See Table 12-16 (pp.30-36), JIS X0510:2004.
+    /** Table of the error correction code (Reed-Solomon block).
+    @see Table 12-16 (pp.30-36), JIS X0510:2004.
+    \hideinitializer
+    */
 
     public static $eccTable = array(
         array(array( 0,  0), array( 0,  0), array( 0,  0), array( 0,  0)),
@@ -243,12 +285,14 @@ class QRspec {
 
     // Alignment pattern ---------------------------------------------------
 
-    // Positions of alignment patterns.
-    // This array includes only the second and the third position of the 
-    // alignment patterns. Rest of them can be calculated from the distance 
-    // between them.
+    /** Positions of alignment patterns.
+    This array includes only the second and the third position of the 
+    lignment patterns. Rest of them can be calculated from the distance 
+    between them.
      
-    // See Table 1 in Appendix E (pp.71) of JIS X0510:2004.
+    @see Table 1 in Appendix E (pp.71) of JIS X0510:2004.
+    \hideinitializer
+    */
      
     public static $alignmentPattern = array(      
         array( 0,  0),
@@ -262,13 +306,12 @@ class QRspec {
         array(24, 50), array(28, 54), array(32, 58), array(26, 54), array(30, 58), //35-40
     );                                                                                  
 
-    
-    /** --------------------------------------------------------------------
-     * Put an alignment marker.
-     * @param frame
-     * @param width
-     * @param ox,oy center coordinate of the pattern
-     */
+    //----------------------------------------------------------------------
+    /** Puts an alignment marker.
+    @param frame
+    @param width
+    @param ox,oy center coordinate of the pattern
+    */
     public static function putAlignmentMarker(array &$frame, $ox, $oy)
     {
         $finder = array(
@@ -283,7 +326,7 @@ class QRspec {
         $xStart = $ox-2;
         
         for($y=0; $y<5; $y++) {
-            QRstr::set($frame, $xStart, $yStart+$y, $finder[$y]);
+            self::set($frame, $xStart, $yStart+$y, $finder[$y]);
         }
     }
 
@@ -326,11 +369,11 @@ class QRspec {
     }
 
     // Version information pattern -----------------------------------------
-
-    // Version information pattern (BCH coded).
-    // See Table 1 in Appendix D (pp.68) of JIS X0510:2004.
-    
-    // size: [QRSPEC_VERSION_MAX - 6]
+    /** Version information pattern (BCH coded).
+    size: [QRSPEC_VERSION_MAX - 6]
+    @see Table 1 in Appendix D (pp.68) of JIS X0510:2004.
+    \hideinitializer
+    */
     
     public static $versionPattern = array(
         0x07c94, 0x085bc, 0x09a99, 0x0a4d3, 0x0bbf6, 0x0c762, 0x0d847, 0x0e60d,
@@ -349,8 +392,11 @@ class QRspec {
         return self::$versionPattern[$version -7];
     }
 
-    // Format information --------------------------------------------------
-    // See calcFormatInfo in tests/test_qrspec.c (orginal qrencode c lib)
+    //----------------------------------------------------------------------
+    /** Format information.
+    @see calcFormatInfo in tests/test_qrspec.c (orginal qrencode c lib)
+    \hideinitializer
+    */
     
     public static $formatInfo = array(
         array(0x77c4, 0x72f3, 0x7daa, 0x789d, 0x662f, 0x6318, 0x6c41, 0x6976),
@@ -371,16 +417,16 @@ class QRspec {
     }
 
     // Frame ---------------------------------------------------------------
-    // Cache of initial frames.
-     
+    
+    /** Cache of initial frames. */
     public static $frames = array();
 
-    /** --------------------------------------------------------------------
-     * Put a finder pattern.
-     * @param frame
-     * @param width
-     * @param ox,oy upper-left coordinate of the pattern
-     */
+    /** Put a finder pattern.
+    @param frame
+    @param width
+    @param ox,oy upper-left coordinate of the pattern
+    \hideinitializer
+    */
     public static function putFinderPattern(&$frame, $ox, $oy)
     {
         $finder = array(
@@ -394,7 +440,7 @@ class QRspec {
         );                            
         
         for($y=0; $y<7; $y++) {
-            QRstr::set($frame, $ox, $oy+$y, $finder[$y]);
+            self::set($frame, $ox, $oy+$y, $finder[$y]);
         }
     }
 
@@ -422,14 +468,14 @@ class QRspec {
         
         $setPattern = str_repeat("\xc0", 8);
         
-        QRstr::set($frame, 0, 7, $setPattern);
-        QRstr::set($frame, $width-8, 7, $setPattern);
-        QRstr::set($frame, 0, $width - 8, $setPattern);
+        self::set($frame, 0, 7, $setPattern);
+        self::set($frame, $width-8, 7, $setPattern);
+        self::set($frame, 0, $width - 8, $setPattern);
     
         // Format info
         $setPattern = str_repeat("\x84", 9);
-        QRstr::set($frame, 0, 8, $setPattern);
-        QRstr::set($frame, $width - 8, 8, $setPattern, 8);
+        self::set($frame, 0, 8, $setPattern);
+        self::set($frame, $width - 8, 8, $setPattern, 8);
         
         $yOffset = $width - 8;
 
@@ -477,6 +523,10 @@ class QRspec {
     }
 
     //----------------------------------------------------------------------
+    /** Dumps debug HTML of frame.
+    @param Array $frame code frame
+    @param Boolean $binary_mode in binary mode only contents is dumped, without styling
+    */
     public static function debug($frame, $binary_mode = false)
     {
         if ($binary_mode) {
@@ -486,11 +536,7 @@ class QRspec {
                     $frameLine = join('&#9608;&#9608;', explode('1', $frameLine));
                 }
                 
-                ?>
-            <style>
-                .m { background-color: white; }
-            </style>
-            <?php
+                echo '<style> .m { background-color: white; } </style> ';
                 echo '<pre><tt><br/ ><br/ ><br/ >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
                 echo join("<br/ >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;", $frame);
                 echo '</tt></pre><br/ ><br/ ><br/ ><br/ ><br/ ><br/ >';
@@ -498,45 +544,71 @@ class QRspec {
         } else {
         
             foreach ($frame as &$frameLine) {
-                $frameLine = join('<span class="m">&nbsp;</span>',  explode("\xc0", $frameLine));
-                $frameLine = join('<span class="m">&#9618;</span>', explode("\xc1", $frameLine));
-                $frameLine = join('<span class="p">&nbsp;</span>',  explode("\xa0", $frameLine));
-                $frameLine = join('<span class="p">&#9618;</span>', explode("\xa1", $frameLine));
-                $frameLine = join('<span class="s">&#9671;</span>', explode("\x84", $frameLine)); //format 0
-                $frameLine = join('<span class="s">&#9670;</span>', explode("\x85", $frameLine)); //format 1
-                $frameLine = join('<span class="x">&#9762;</span>', explode("\x81", $frameLine)); //special bit
-                $frameLine = join('<span class="c">&nbsp;</span>',  explode("\x90", $frameLine)); //clock 0
-                $frameLine = join('<span class="c">&#9719;</span>', explode("\x91", $frameLine)); //clock 1
-                $frameLine = join('<span class="f">&nbsp;</span>',  explode("\x88", $frameLine)); //version
-                $frameLine = join('<span class="f">&#9618;</span>', explode("\x89", $frameLine)); //version
-                $frameLine = join('&#9830;', explode("\x01", $frameLine));
-                $frameLine = join('&#8901;', explode("\0", $frameLine));
-            }
             
-            ?>
-            <style>
-                .p { background-color: yellow; }
-                .m { background-color: #00FF00; }
-                .s { background-color: #FF0000; }
-                .c { background-color: aqua; }
-                .x { background-color: pink; }
-                .f { background-color: gold; }
-            </style>
-            <?php
-            echo "<pre><tt>";
+                $frameLine = strtr($frameLine, array(
+                    "\xc0" => '<span class="m">&nbsp;</span>',   //marker 0    
+                    "\xc1" => '<span class="m">&#9618;</span>',  //marker 1
+                    "\xa0" => '<span class="p">&nbsp;</span>',   //submarker 0
+                    "\xa1" => '<span class="p">&#9618;</span>',  //submarker 1
+                    "\x84" => '<span class="s">F</span>',        //format 0
+                    "\x85" => '<span class="s">f</span>',        //format 1
+                    "\x81" => '<span class="x">S</span>',        //special bit
+                    "\x90" => '<span class="c">C</span>',        //clock 0
+                    "\x91" => '<span class="c">c</span>',        //clock 1
+                    "\x88" => '<span class="f">&nbsp;</span>',   //version 0 
+                    "\x89" => '<span class="f">&#9618;</span>',  //version 1
+                    "\x03" => '1',                               // 1
+                    "\x02" => '0',                               // 0         
+                ));                                          
+            }                
+           
+            echo '<style>';
+            echo '    .p { background-color: yellow; }';
+            echo '    .m { background-color: #00FF00; }';
+            echo '    .s { background-color: #FF0000; }';
+            echo '    .c { background-color: aqua; }';
+            echo '    .x { background-color: pink; }';
+            echo '    .f { background-color: gold; }';
+            echo '</style>';
+           
+            echo "<tt>";
             echo join("<br/ >", $frame);
-            echo "</tt></pre>";
+            echo "<br/>Legend:<br/>";
+            echo '1 - data 1<br/>';                          
+            echo '0 - data 0<br/>';  
+            echo '<span class="m">&nbsp;</span> - marker bit 0<br/>'; 
+            echo '<span class="m">&#9618;</span> - marker bit 1<br/>';  
+            echo '<span class="p">&nbsp;</span> - secondary marker bit 0<br/>';   
+            echo '<span class="p">&#9618;</span> - secondary marker bit 1<br/>';  
+            echo '<span class="s">F</span> - format bit 0<br/>';        
+            echo '<span class="s">f</span> - format bit 1<br/>';        
+            echo '<span class="x">S</span> - special bit<br/>';        
+            echo '<span class="c">C</span> - clock bit 0<br/>';        
+            echo '<span class="c">c</span> - clock bit 1<br/>';        
+            echo '<span class="f">&nbsp;</span> - version bit 0<br/>'; 
+            echo '<span class="f">&#9618;</span> - version bit 1<br/>';
+            echo "</tt>";
         
         }
     }
 
     //----------------------------------------------------------------------
+    /** Serializes frame.
+    Create compressed, serialized version of frame.
+    @param Array $frame Code Frame
+    @return String binary compresed Code Frame
+    */
     public static function serial($frame)
     {
         return gzcompress(join("\n", $frame), 9);
     }
     
     //----------------------------------------------------------------------
+    /** Deserializes frame.
+    Loads frame from serialized compressed binary
+    @param String $code binary, GZipped, serialized frame
+    @return Array Code Frame array
+    */
     public static function unserial($code)
     {
         return explode("\n", gzuncompress($code));
@@ -571,6 +643,23 @@ class QRspec {
     }
 
     //----------------------------------------------------------------------
+    /** Sets code frame with speciffied code.
+    @param Array $frame target frame (modified by reference)
+    @param Integer $x X-axis position of replacement
+    @param Integer $y Y-axis position of replacement
+    @param Byte $repl replacement string
+    @param Integer $replLen (optional) replacement string length, when __Integer__ > 1 subset of given $repl is used, when __false__ whole $repl is used
+    */
+    public static function set(&$frame, $x, $y, $repl, $replLen = false) {
+        $frame[$y] = substr_replace($frame[$y], ($replLen !== false)?substr($repl,0,$replLen):$repl, $x, ($replLen !== false)?$replLen:strlen($repl));
+    }
+    
+    //----------------------------------------------------------------------
+    
+    /** @name Reed-Solomon related shorthand getters.
+    Syntax-sugar to access code speciffication by getter name, not by spec array field.
+    */
+    /** @{*/
     public static function rsBlockNum($spec)     { return $spec[0] + $spec[3]; }
     public static function rsBlockNum1($spec)    { return $spec[0]; }
     public static function rsDataCodes1($spec)   { return $spec[1]; }
@@ -580,5 +669,5 @@ class QRspec {
     public static function rsEccCodes2($spec)    { return $spec[2]; }
     public static function rsDataLength($spec)   { return ($spec[0] * $spec[1]) + ($spec[3] * $spec[4]);    }
     public static function rsEccLength($spec)    { return ($spec[0] + $spec[3]) * $spec[2]; }
-    
+    /** @}*/
 }

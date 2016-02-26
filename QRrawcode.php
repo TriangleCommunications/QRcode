@@ -22,18 +22,26 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+/** Raw Code holder.
+ * Contains encoded code data before there are spatialy distributed into frame and masked.
+ * Here goes dividing data into blocks and calculating ECC stream.
+ */
 class QRrawcode {
-    public $version;
-    public $datacode = array();
-    public $ecccode = array();
-    public $blocks;
-    public $rsblocks = array(); //of RSblock
-    public $count;
-    public $dataLength;
-    public $eccLength;
-    public $b1;
+
+    public $version;                ///< __Integer__ code Version
+    public $datacode = array();     ///< __Array__ data stream
+    public $ecccode = array();      ///< __Array__ ECC Stream
+    public $blocks;                 ///< __Integer__ RS Blocks count
+    public $rsblocks = array();     ///< __Array__ of RSblock, ECC code blocks
+    public $count;                  ///< __Integer__ position of currently processed ECC code
+    public $dataLength;             ///< __Integer__ data stream length
+    public $eccLength;              ///< __Integer__ ECC stream length
+    public $b1;                     ///< __Integer__ width of code in pixels, used as a modulo base for column overflow
     
     //----------------------------------------------------------------------
+    /** Raw Code holder Constructor 
+    @param QRinput $input input stream
+    */
     public function __construct(QRinput $input)
     {
         $spec = array(0,0,0,0,0);
@@ -62,6 +70,9 @@ class QRrawcode {
     }
     
     //----------------------------------------------------------------------
+    /** Initializes Raw Code according to current code speciffication
+    @param Array $spec code speciffigation, as provided by QRspec
+    */
     public function init(array $spec)
     {
         $dl = QRspec::rsDataCodes1($spec);
@@ -105,6 +116,9 @@ class QRrawcode {
     }
     
     //----------------------------------------------------------------------
+    /** Gets ECC code 
+    @return Integer ECC byte for current object position
+    */
     public function getCode()
     {
         $ret;
