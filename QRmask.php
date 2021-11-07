@@ -165,7 +165,7 @@ class QRmask {
 
 		for($y=0; $y<$width; $y++) {
 			for($x=0; $x<$width; $x++) {
-				if($bitMask[$y][$x] == 1) {
+				if(isset($bitMask[$y][$x]) && $bitMask[$y][$x] == 1) {
 					$d[$y][$x] = chr(ord($s[$y][$x]) ^ (int)$bitMask[$y][$x]);
 				}
 				$b += (int)(ord($d[$y][$x]) & 1);
